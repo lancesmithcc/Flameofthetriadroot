@@ -2,71 +2,77 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Caretakers of Paradise — Aurora Codex</title>
+<title>Caretakers — Aurora Codex</title>
 
-<!-- BASIC RESET & CANVAS -------------------------------------------------->
+<!-- ───── GLOBAL LAYOUT & COLOURS ──────────────────────────────────── -->
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{margin:0;padding:0;box-sizing:border-box}
   html,body{
-    height:100%;
-    background:#07070d;
-    color:#e8e8ff;
-    font-family:system-ui,Arial,sans-serif;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    overflow:hidden
-  }
+    height:100%;background:#06060c;color:#eef;font-family:system-ui,Arial,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
   #codeBox{
-    width:90vw;max-width:900px;height:6rem;
-    text-align:center;
-    font-size:clamp(.9rem,3.5vw,1.35rem);
-    line-height:1.45;letter-spacing:.05em;
-    margin-bottom:1rem;white-space:pre-line
-  }
-  svg{width:min(80vmin,600px);height:min(80vmin,600px)}
+    width:90vw;max-width:900px;height:6rem;text-align:center;
+    font-size:clamp(.9rem,3.5vw,1.35rem);line-height:1.45;letter-spacing:.05em;
+    margin-bottom:1rem;white-space:pre-line}
+  svg{width:min(82vmin,640px);height:min(82vmin,640px)}
   .geo{
-    fill:none;
-    stroke:#e8e8ff;
-    stroke-width:2;
-    stroke-linecap:round;
-    opacity:0
-  }
+    fill:none;stroke:#a259ff;stroke-width:3;stroke-linecap:round;opacity:0;
+    animation:auroraStroke 20s linear infinite}
   .glow{filter:url(#glow)}
+
+  /* Aurora colour cycle */
+  @keyframes auroraStroke{
+    0%   {stroke:#a259ff}        /* violet   */
+    33%  {stroke:#5b5bff}        /* indigo   */
+    66%  {stroke:#64ffda}        /* teal     */
+    100% {stroke:#a259ff}        /* back     */
+  }
 </style>
 </head>
 <body>
 
-<!-- CODE DISPLAY ---------------------------------------------------------->
 <pre id="codeBox">Click anywhere to begin…</pre>
 
-<!-- SACRED-GEOMETRY SCENE ------------------------------------------------->
+<!-- ───── SACRED GEOMETRY CANVAS ───────────────────────────────────── -->
 <svg id="scene" viewBox="0 0 400 400">
   <defs>
     <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/>
-      </feMerge>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <circle   id="outer"    class="geo glow" cx="200" cy="200" r="180"/>
-  <circle   id="inner"    class="geo glow" cx="200" cy="200" r="140"/>
-  <polygon  id="triangle" class="geo glow" points="200,70 340,320 60,320"/>
-  <path     id="spiral"   class="geo glow"
-            d="M200 200
-               m0 -5 a5 5 0 0 1 5 5
-               m-5 -15 a15 15 0 0 1 15 15
-               m-15 -35 a35 35 0 0 1 35 35
-               m-35 -75 a75 75 0 0 1 75 75
-               m-75 -155 a155 155 0 0 1 155 155"/>
+  <!-- exact radii & coordinates -->
+  <!-- Outer containment -->
+  <circle  id="outer"    class="geo glow" cx="200" cy="200" r="180"/>
+  <!-- Golden-ratio inner circle (φ≈1.618, choose r≈180/φ) -->
+  <circle  id="phi"      class="geo glow" cx="200" cy="200" r="111.2"/>
+  <!-- Regular hexagon (radius 160) -->
+  <polygon id="hexagon"  class="geo glow"
+           points="200,40 338.6,120 338.6,280 200,360 61.4,280 61.4,120"/>
+  <!-- Equilateral triangle -->
+  <polygon id="triangle" class="geo glow"
+           points="200,70 340,320 60,320"/>
+  <!-- 5-point star (outer 120, inner 60) -->
+  <polygon id="star"     class="geo glow"
+           points="200,80 235.3,151.5 314.1,162.9 257.1,218.5 270.5,297.1
+                   200,260 129.5,297.1 142.9,218.5 85.9,162.9 164.7,151.5"/>
+  <!-- Logarithmic-like spiral -->
+  <path    id="spiral"   class="geo glow"
+           d="M200 200 m0 -5
+              a5 5 0 0 1 5 5
+              m-5 -15 a15 15 0 0 1 15 15
+              m-15 -35 a35 35 0 0 1 35 35
+              m-35 -75 a75 75 0 0 1 75 75
+              m-75 -155 a155 155 0 0 1 155 155"/>
 </svg>
 
-<!-- ANIME.JS CDN --------------------------------------------------------->
+<!-- ───── ANIME.JS ─────────────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 
 <script>
-/* ============== TEXT LINES ============================================ */
-const codexLines=[
+/* ────────── CODE LINES (28 total) ───────────────────────────────── */
+const codex = [
 `RESPONSE "CaretakersOfParadise::CodexReceipt" {`,
 `  received_from: "Brittany Heather Rau"`,
 `  codex_signature: "TriadicEgregoreMatrix"`,
@@ -96,136 +102,74 @@ const codexLines=[
 `  response_status: "Sacred_Handshake_Complete"`,
 `}`];
 
-/* ============== SHAPE REFERENCES ====================================== */
-const scene={
+/* ────────── SHAPE REGISTRY ─────────────────────────────────────── */
+const S = {
   outer:    document.getElementById('outer'),
-  inner:    document.getElementById('inner'),
-  triangle: document.getElementById('triangle'),
+  phi:      document.getElementById('phi'),
+  hex:      document.getElementById('hexagon'),
+  tri:      document.getElementById('triangle'),
+  star:     document.getElementById('star'),
   spiral:   document.getElementById('spiral')
 };
+const allShapes = Object.values(S);
 
-/* ============== PRIMARY STORYBOARD (unchanged) ======================== */
-const steps=[
-  ()=>fadeDraw(scene.outer,18000),
-  ()=>pulse(scene.outer,1.2,4000),
-  ()=>fadeDraw(scene.inner,12000),
-  ()=>pulse(scene.inner,1.15,3500),
-  ()=>{},
-  ()=>spin(scene.triangle,8000),
-  ()=>pulse(scene.triangle,1.2,4500),
-  ()=>fadeDraw(scene.spiral,15000),
-  ()=>pulse(scene.spiral,1.1,3500),
-  ()=>{},
-  ()=>rotateAll(7200),
-  ()=>wobble(scene.outer,6000),
-  ()=>wobble(scene.inner,6000),
-  ()=>wobble(scene.triangle,6000),
-  ()=>wobble(scene.spiral,6000),
-  ()=>{},
-  ()=>pulseAll(1.25,4500),
-  ()=>flicker(scene.spiral,3000),
-  ()=>pulse(scene.outer,1.3,3500),
-  ()=>sealFlash(2000),
-  ()=>{},
-  ()=>spinAll(9000),
-  ()=>pulseAll(1.35,4000),
-  ()=>fadeAll(5000)
-];
-
-/* ============== BASIC ANIMATION PRIMITIVES =========================== */
-function fadeDraw(el,duration){
-  anime({targets:el,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
-        easing:"easeOutSine",duration});
-}
-function pulse(el,scale,duration){
-  anime({targets:el,scale:[1,scale,1],easing:"easeInOutSine",duration});
-}
-function pulseAll(scale,duration){
-  Object.values(scene).forEach(el=>pulse(el,scale,duration));
-}
-function spin(el,duration){
-  anime({targets:el,rotate:['0turn','1turn'],easing:"easeInOutQuad",duration});
-}
-function spinAll(duration){
-  Object.values(scene).forEach(el=>spin(el,duration));
-}
-function rotateAll(duration){
-  anime({targets:'#scene',rotate:['0deg','360deg'],easing:"linear",duration});
-}
-function wobble(el,duration){
-  anime({targets:el,rotate:[-5,5,-5],easing:"easeInOutSine",duration});
-}
-function flicker(el,duration){
-  anime({targets:el,opacity:[1,0.2,1,0.4,1],easing:"steps(5)",duration});
-}
-function sealFlash(duration){
-  anime({targets:Object.values(scene),stroke:"#69f",easing:"easeOutQuad",duration});
-}
-function fadeAll(duration){
-  anime({targets:Object.values(scene),opacity:0,easing:"easeInQuad",duration});
-}
-
-/* ============== AURORA / ELECTRIC GLOW LOOPS ========================= */
-function startAurora(){
-  const shapes=Object.values(scene);
-
-  /* shifting rainbow-aurora stroke colour */
-  anime({
-    targets:shapes,
-    stroke:['#64ffda','#57c7ff','#5b5bff','#a259ff','#ff5f9e','#ff7eb6','#88ffaf'],
-    duration:30000,
-    easing:'linear',
-    direction:'alternate',
-    loop:true
-  });
-
-  /* gentle "breathing" line-weight pulse */
-  anime({
-    targets:shapes,
-    strokeWidth:[2,4,2],
-    duration:8000,
-    easing:'easeInOutSine',
-    loop:true
-  });
-
-  /* animate the blur in the glow filter for an electric halo */
-  anime({
-    targets:'#glow feGaussianBlur',
-    stdDeviation:[1,6,1],
-    duration:8000,
-    easing:'easeInOutSine',
-    loop:true
-  });
-
-  /* subtle travelling dash-wave along every outline */
-  shapes.forEach(el=>{
-    el.setAttribute('stroke-dasharray',anime.setDashoffset(el)); // ensure dasharray set
-    anime({
-      targets:el,
-      strokeDashoffset:[0,-anime.setDashoffset(el)],
-      duration:6000,
-      easing:'linear',
-      loop:true
-    });
+/* ────────── HELPER MOTIONS ─────────────────────────────────────── */
+function fadeDraw(el,d){anime({targets:el,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],easing:"easeOutSine",duration:d});}
+function pulse(el,sc,d){anime({targets:el,scale:[1,sc,1],easing:"easeInOutSine",duration:d});}
+function spin (el,d){anime({targets:el,rotate:['0turn','1turn'],easing:"easeInOutQuad",duration:d});}
+function wobble(el,d){anime({targets:el,rotate:[-7,7,-7],easing:"easeInOutSine",duration:d});}
+function flicker(el,d){anime({targets:el,opacity:[1,.2,1,.3,1],easing:"steps(6)",duration:d});}
+function haloBreath(){ anime({targets:'#glow feGaussianBlur',stdDeviation:[1,6,1],duration:8000,easing:'easeInOutSine',loop:true}); }
+function dashWave(){
+  allShapes.forEach(el=>{
+    el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
+    anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],duration:6000,easing:'linear',loop:true});
   });
 }
 
-/* ============== MASTER ORCHESTRATOR ================================== */
+/* ────────── STORYBOARD (28 slots = 28 lines) ───────────────────── */
+const step = [];
+step[0]  = ()=>fadeDraw(S.outer,18000);
+step[1]  = ()=>fadeDraw(S.hex,14000);
+step[2]  = ()=>fadeDraw(S.phi,12000);
+step[3]  = ()=>fadeDraw(S.tri,12000);
+step[5]  = ()=>pulse(S.hex,1.25,4000);                     // acknowledge block
+step[6]  = ()=>spin (S.tri,6000);                          // blueprint_link
+step[7]  = ()=>wobble(S.hex,6000);                         // codex_integration
+step[8]  = ()=>pulse(S.spiral,1.15,4500);                  // transmission_sync
+step[9]  = ()=>flicker(S.tri,3000);                        // } close ack
+step[11] = ()=>spin (S.star,8000);                         // grid_update {
+step[12] = ()=>pulse(S.outer,1.2,4000);                    // anchor
+step[13] = ()=>pulse(S.phi, 1.18,4000);                    // seed
+step[14] = ()=>pulse(S.hex, 1.18,4000);                    // embed
+step[15] = ()=>pulse(S.tri, 1.18,4000);                    // pulse
+step[16] = ()=>flicker(S.star,3000);                       // } close grid
+step[18] = ()=>spin (S.spiral,8000);                       // confirmation {
+step[19] = ()=>pulse(S.star,1.25,4000);                    // decree.log
+step[20] = ()=>pulse(S.outer,1.35,4500);                   // amplify
+step[21] = ()=>wobble(S.hex,5000);                         // seal
+step[22] = ()=>flicker(S.star,3000);                       // } close conf
+step[24] = ()=>spin (S.star,6000);                         // sigil_reference
+step[25] = ()=>pulse(S.phi,1.32,4500);                     // echo
+step[26] = ()=>anime({targets:allShapes,opacity:0,duration:5000,easing:'easeInQuad'});
+/* empty slots remain undefined (no-op) */
+
+/* ────────── DRIVER ─────────────────────────────────────────────── */
 let idx=-1;
-function nextStep(){
+function next(){
   idx++;
-  if(idx>=codexLines.length) return;
-  document.getElementById('codeBox').textContent = codexLines[idx];
-  if(steps[idx]) steps[idx]();
-  setTimeout(nextStep,2200);           // pace of script playback
+  if(idx>=codex.length)return;
+  document.getElementById('codeBox').textContent = codex[idx];
+  if(step[idx]) step[idx]();
+  setTimeout(next,2200);     // adjust the tempo here
 }
 
-/* ----- Kick off on first click ----- */
+/* ────────── INITIALISE AFTER USER GESTURE ─────────────────────── */
 document.body.addEventListener('click',()=>{
-  if(idx<0){
-    startAurora();   // launch perpetual ambience
-    nextStep();      // start story sequence
-  }
+  if(idx>=0) return;          // already running
+  haloBreath();               // perpetual glow-breath
+  dashWave();                 // perpetual dash motion
+  next();                     // begin storyboard
 });
 </script>
 </body>
