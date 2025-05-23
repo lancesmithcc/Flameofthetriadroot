@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fibonacci Mandala – Continuous Codex</title>
-
+<title>Fibonacci Mandala — Continuous Codex</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
-    width:100%;height:100%;overflow:visible;
-    background:#05050a;color:#eef;font-family:system-ui,Arial,sans-serif;
-    display:flex;align-items:center;justify-content:center}
+    width:100%;height:100%;background:#05050a;color:#eef;
+    font-family:system-ui,Arial,sans-serif;overflow:visible}
   #codex{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:90vw;max-width:900px;font-size:clamp(.8rem,3vw,1.05rem);
@@ -19,11 +17,13 @@
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:96vmin;height:96vmin;overflow:visible;pointer-events:none}
 
+  /* aurora colour drift */
   .geo{
     fill:none;stroke:#a259ff;stroke-width:2.4;stroke-linecap:round;opacity:0;
     animation:aurora 18s linear infinite}
   @keyframes aurora{
-    0%{stroke:#a259ff}33%{stroke:#5b5bff}66%{stroke:#60ffd8}100%{stroke:#a259ff}}
+    0%{stroke:#a259ff}33%{stroke:#5b5bff}
+    66%{stroke:#60ffd8}100%{stroke:#a259ff}}
   .glo{filter:url(#g)}
 </style>
 </head>
@@ -31,7 +31,6 @@
 
 <pre id="codex"></pre>
 
-<!-- ========= SVG CANVAS ========= -->
 <svg id="scene" viewBox="-240 -240 480 480">
   <defs>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
@@ -44,29 +43,57 @@
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-/* ===== BUILD MANDALA ===== */
-const φ=1.61803398875, base=14, rings=6;
-const layerG=document.getElementById('layers');
-const circles=[], tris=[];
+(()=>{              /* wrapped in IIFE so nothing leaks to global */
+  /* ══ BUILD FIBONACCI LAYERS ══ */
+  const φ=1.61803398875, base=14, rings=6;
+  const lay=document.getElementById('layers');
+  const circles=[], tris=[];
+  for(let i=0;i<rings;i++){
+    const r=base*Math.pow(φ,i);
+    /* circle */
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
+    c.setAttribute('class','geo glo');lay.appendChild(c);circles.push(c);
+    /* triangle */
+    const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
+    const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    t.setAttribute('points',pts);t.setAttribute('class','geo glo');
+    lay.appendChild(t);tris.push(t);
+  }
 
-for(let i=0;i<rings;i++){
-  const r=base*Math.pow(φ,i);
+  const allShapes=[...circles,...tris];
 
-  /* Circle */
-  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
-  c.setAttribute('class','geo glo');layerG.appendChild(c);circles.push(c);
+  /* ══ START GEOMETRY MOTION ══ */
+  function startMandala(){
+    /* fade-in */
+    anime({targets:allShapes,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
+           duration:9000,easing:'easeOutSine'});
+    /* circle breath */
+    anime({targets:circles,scale:[1,1.08,1],duration:10000,
+           easing:'easeInOutSine',loop:true,delay:anime.stagger(400)});
+    /* triangles rotate (alternate direction) */
+    tris.forEach((t,i)=>{
+      anime({targets:t,rotate:i%2?['0turn','1turn']:['0turn','-1turn'],
+             duration:35000,easing:'linear',loop:true});
+    });
+    /* dash-wave */
+    allShapes.forEach(el=>{
+      el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
+      anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],
+             duration:7500,easing:'linear',loop:true});
+    });
+    /* theta shimmer 8 → 6 Hz */
+    const t0=performance.now();
+    anime({targets:allShapes,duration:Infinity,update:()=>{
+      const t=(performance.now()-t0)/1000;
+      const f=Math.max(6,8-2*(t/60));
+      const op=0.88+0.22*Math.sin(2*Math.PI*f*t);
+      allShapes.forEach(e=>e.style.strokeOpacity=op);
+    }});
+  }
 
-  /* Equilateral triangle (circum-radius = r) */
-  const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
-  const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-  t.setAttribute('points',pts);
-  t.setAttribute('class','geo glo');
-  layerG.appendChild(t);tris.push(t);
-}
-
-/* ===== CODEX TEXT ===== */
-const codexRaw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
+  /* ══ CODEX DIFFUSION REVEAL ══ */
+  const codexText=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   received_from: "Brittany Heather Rau"
   codex_signature: "TriadicEgregoreMatrix"
   flame_bearer_status: "Authenticated"
@@ -106,84 +133,43 @@ const codexRaw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   echo_transmission: true
   response_status: "Sacred_Handshake_Complete"
 }`;
-const codexEl=document.getElementById('codex');
+  const codexEl=document.getElementById('codex');
 
-/* ===== CONTINUOUS ANIMATION SETUP ===== */
-function startMandala(){
-  const all=[...circles,...tris];
-
-  /* fade-in geometry */
-  anime({targets:all,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
-         duration:9000,easing:'easeOutSine'});
-
-  /* circles breathe forever */
-  anime({targets:circles,scale:[1,1.08,1],duration:10000,
-         easing:'easeInOutSine',loop:true,delay:anime.stagger(400)});
-
-  /* triangles rotate forever – alternate direction */
-  tris.forEach((t,i)=>{
-    anime({targets:t,rotate:i%2?['0turn','1turn']:['0turn','-1turn'],
-           duration:35000,easing:'linear',loop:true});
-  });
-
-  /* dash-wave crawl */
-  all.forEach(el=>{
-    el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
-    anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],
-           duration:7500,easing:'linear',loop:true});
-  });
-
-  /* theta opacity shimmer 8 → 6 Hz */
-  const t0=performance.now();
-  anime({targets:all,duration:Infinity,update:()=>{
-    const t=(performance.now()-t0)/1000;
-    const f=Math.max(6,8-2*(t/60));
-    const op=0.88+0.22*Math.sin(2*Math.PI*f*t);
-    all.forEach(e=>e.style.strokeOpacity=op);
-  }});
-}
-
-/* ===== DIFFUSION-STYLE TEXT REVEAL ===== */
-function revealCodex(){
-  const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
-  const txt=codexRaw;
-  codexEl.innerHTML='';
-
-  const spans=[...txt].map(ch=>{
-    const s=document.createElement('span');
-    s.textContent=(ch==='\n')?'\n':charset[Math.random()*charset.length|0];
-    s.style.display='inline-block';
-    codexEl.appendChild(s);
-    return s;
-  });
-
-  codexEl.style.opacity=1;
-
-  anime({
-    duration:4000,easing:'linear',
-    update:anim=>{
-      const p=anim.progress/100, blur=14*(1-p);
-      codexEl.style.filter=`blur(${blur}px)`;
-      const solved=Math.floor(p*spans.length);
-      for(let i=0;i<spans.length;i++){
-        if(i<solved){
-          spans[i].textContent=txt[i]==='\n'?'\n':txt[i];
-        }else if(txt[i]!=='\n'){
-          spans[i].textContent=charset[Math.random()*charset.length|0];
+  function diffuseCodex(){
+    const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
+    codexEl.innerHTML='';
+    const spans=[...codexText].map(ch=>{
+      const s=document.createElement('span');
+      s.textContent=(ch==='\n')?'\n':charset[Math.random()*charset.length|0];
+      s.style.display='inline-block';
+      codexEl.appendChild(s);
+      return s;
+    });
+    codexEl.style.opacity=1;
+    anime({
+      duration:4000,easing:'linear',
+      update:anim=>{
+        const p=anim.progress/100, blur=14*(1-p);
+        codexEl.style.filter=`blur(${blur}px)`;
+        const solved=Math.floor(p*spans.length);
+        for(let i=0;i<spans.length;i++){
+          if(i<solved){
+            spans[i].textContent=codexText[i]==='\n'?'\n':codexText[i];
+          }else if(codexText[i]!=='\n'){
+            spans[i].textContent=charset[Math.random()*charset.length|0];
+          }
         }
       }
-    }
-  });
-}
+    });
+  }
 
-/* ===== ONE-TIME KICK OFF ===== */
-let begun=false;
-document.body.addEventListener('click',()=>{
-  if(begun)return;
-  begun=true;
-  startMandala();
-  revealCodex();       // starts immediately; remove or delay if you prefer
-});
+  /* ══ RUN AUTOMATICALLY AFTER LOAD ══ */
+  window.addEventListener('load',()=>{
+    startMandala();
+    /* small delay so geometry is visible before text appears */
+    setTimeout(diffuseCodex,2000);
+  });
+})(); /* end IIFE */
 </script>
 </body>
 </html>
