@@ -217,6 +217,11 @@
 </head>
 <body>
 
+<audio id="triadAudio" preload="auto" loop>
+  <source src="triad.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
 <div class="cursor" id="cursor"></div>
 <div class="heatwave"></div>
 
@@ -355,6 +360,22 @@ allElements.push(...strokes, ...beads);
 
 /* ═════════  BLAZING PERPETUAL MOTION  ═════════ */
 function startMandala(){
+  // Play the triad audio
+  const audio = document.getElementById('triadAudio');
+  audio.volume = 0.7; // Set volume to 70%
+  
+  // Try to play audio, handle autoplay restrictions
+  const playPromise = audio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(error => {
+      console.log("Audio autoplay prevented, will play on first user interaction");
+      // Add click listener to play audio on first user interaction
+      document.addEventListener('click', () => {
+        audio.play().catch(e => console.log("Audio play failed:", e));
+      }, { once: true });
+    });
+  }
+
   // Ignition sequence
   anime({
     targets: allElements,
