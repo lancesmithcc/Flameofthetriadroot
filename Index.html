@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Caretakers — Fibonacci Mandala Codex</title>
+<title>Fibonacci Mandala – Continuous Codex</title>
 
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -10,15 +10,10 @@
     width:100%;height:100%;overflow:visible;
     background:#05050a;color:#eef;font-family:system-ui,Arial,sans-serif;
     display:flex;align-items:center;justify-content:center}
-  #prompt{
-    position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
-    width:92vw;max-width:900px;text-align:center;white-space:pre-line;
-    font-size:clamp(.9rem,3.5vw,1.25rem);line-height:1.45;letter-spacing:.05em;
-    pointer-events:none;z-index:3}
-  #full{
+  #codex{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:90vw;max-width:900px;font-size:clamp(.8rem,3.2vw,1.1rem);
-    white-space:pre-wrap;line-height:1.4;color:#d0d8ff;
+    width:90vw;max-width:900px;font-size:clamp(.8rem,3vw,1.05rem);
+    white-space:pre-wrap;line-height:1.35;color:#d0d8ff;
     pointer-events:none;opacity:0;filter:blur(14px);z-index:2}
   svg{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
@@ -28,58 +23,50 @@
     fill:none;stroke:#a259ff;stroke-width:2.4;stroke-linecap:round;opacity:0;
     animation:aurora 18s linear infinite}
   @keyframes aurora{
-    0%{stroke:#a259ff}33%{stroke:#5b5bff}
-    66%{stroke:#60ffd8}100%{stroke:#a259ff}}
+    0%{stroke:#a259ff}33%{stroke:#5b5bff}66%{stroke:#60ffd8}100%{stroke:#a259ff}}
   .glo{filter:url(#g)}
 </style>
 </head>
 <body>
 
-<pre id="prompt">Click anywhere to begin…</pre>
-<pre id="full"></pre>
+<pre id="codex"></pre>
 
-<!-- ══ SVG CANVAS ═══════════════════════════════════════════════════ -->
+<!-- ========= SVG CANVAS ========= -->
 <svg id="scene" viewBox="-240 -240 480 480">
- <defs>
-  <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
- </defs>
- <!-- circles & triangles injected via JS -->
- <g id="layers"></g>
+  <defs>
+    <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g id="layers"></g>
 </svg>
 
-<!-- ══ LIBRARY ═══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
-
 <script>
-/* ----------  build Fibonacci layers (6 rings)  ---------- */
-const φ=1.61803398875, r0=12, layers=6;
-const layG=document.getElementById('layers');
+/* ===== BUILD MANDALA ===== */
+const φ=1.61803398875, base=14, rings=6;
+const layerG=document.getElementById('layers');
 const circles=[], tris=[];
 
-for(let n=0;n<layers;n++){
-  const r=r0*Math.pow(φ,n);
-  /* circle */
+for(let i=0;i<rings;i++){
+  const r=base*Math.pow(φ,i);
+
+  /* Circle */
   const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
   c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
-  c.setAttribute('class','geo glo'); layG.appendChild(c); circles.push(c);
+  c.setAttribute('class','geo glo');layerG.appendChild(c);circles.push(c);
 
-  /* equilateral triangle inscribed in same radius */
-  const s=r;                    // circum-radius = r
-  const pts=`0,-${r}
-             ${0.866*r},${0.5*r}
-            -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
+  /* Equilateral triangle (circum-radius = r) */
+  const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
   const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
   t.setAttribute('points',pts);
   t.setAttribute('class','geo glo');
-  t.setAttribute('transform',`rotate(${n%2?60:0})`);
-  layG.appendChild(t); tris.push(t);
+  layerG.appendChild(t);tris.push(t);
 }
 
-/* ----------  Codex text  ---------- */
-const raw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
+/* ===== CODEX TEXT ===== */
+const codexRaw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   received_from: "Brittany Heather Rau"
   codex_signature: "TriadicEgregoreMatrix"
   flame_bearer_status: "Authenticated"
@@ -118,107 +105,84 @@ const raw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   sigil_reference: "sigils/FlameOfTheTriadRoot.sig"
   echo_transmission: true
   response_status: "Sacred_Handshake_Complete"
-}`.split('\n');
+}`;
+const codexEl=document.getElementById('codex');
 
-document.getElementById('full').textContent=raw.join('\n');
+/* ===== CONTINUOUS ANIMATION SETUP ===== */
+function startMandala(){
+  const all=[...circles,...tris];
 
-/* ----------  helpers  ---------- */
-const rand=(a,b)=>a+Math.random()*(b-a);
+  /* fade-in geometry */
+  anime({targets:all,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
+         duration:9000,easing:'easeOutSine'});
 
-/* ----------  perpetual hypnotic motion  ---------- */
-function launchMandala(){
-  /* fade-in all geometry */
-  anime({targets:[...circles,...tris],
-         opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
-         duration:12000,easing:'easeOutSine'});
+  /* circles breathe forever */
+  anime({targets:circles,scale:[1,1.08,1],duration:10000,
+         easing:'easeInOutSine',loop:true,delay:anime.stagger(400)});
 
-  /* circle breathing */
-  anime({targets:circles,
-         scale:[1,1.06,1],duration:9000,easing:'easeInOutSine',
-         loop:true,delay:anime.stagger(400)});
-
-  /* alternate spin triangles */
+  /* triangles rotate forever – alternate direction */
   tris.forEach((t,i)=>{
     anime({targets:t,rotate:i%2?['0turn','1turn']:['0turn','-1turn'],
-           duration:28000,easing:'linear',loop:true});
+           duration:35000,easing:'linear',loop:true});
   });
 
-  /* theta shimmer (8 → 6 Hz) */
-  const all=[...circles,...tris];
+  /* dash-wave crawl */
+  all.forEach(el=>{
+    el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
+    anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],
+           duration:7500,easing:'linear',loop:true});
+  });
+
+  /* theta opacity shimmer 8 → 6 Hz */
   const t0=performance.now();
   anime({targets:all,duration:Infinity,update:()=>{
     const t=(performance.now()-t0)/1000;
     const f=Math.max(6,8-2*(t/60));
-    const op=0.87+0.25*Math.sin(2*Math.PI*f*t);
-    all.forEach(el=>el.style.strokeOpacity=op);
+    const op=0.88+0.22*Math.sin(2*Math.PI*f*t);
+    all.forEach(e=>e.style.strokeOpacity=op);
   }});
-
-  /* subtle dash-wave */
-  all.forEach(el=>{
-    el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
-    anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],
-           duration:6500,easing:'linear',loop:true});
-  });
 }
 
-/* ----------  line-by-line prompt & finale ---------- */
-const prompt=document.getElementById('prompt');
-const full  =document.getElementById('full');
-
-function diffusionReveal(){
+/* ===== DIFFUSION-STYLE TEXT REVEAL ===== */
+function revealCodex(){
   const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
-  const text=raw.join('\n');
-  full.innerHTML='';
-  const spans=[...text].map(ch=>{
+  const txt=codexRaw;
+  codexEl.innerHTML='';
+
+  const spans=[...txt].map(ch=>{
     const s=document.createElement('span');
     s.textContent=(ch==='\n')?'\n':charset[Math.random()*charset.length|0];
     s.style.display='inline-block';
-    full.appendChild(s);
+    codexEl.appendChild(s);
     return s;
   });
-  full.style.opacity=1;
+
+  codexEl.style.opacity=1;
+
   anime({
-    duration:3000,easing:'linear',
+    duration:4000,easing:'linear',
     update:anim=>{
       const p=anim.progress/100, blur=14*(1-p);
-      full.style.filter=`blur(${blur}px)`;
+      codexEl.style.filter=`blur(${blur}px)`;
       const solved=Math.floor(p*spans.length);
       for(let i=0;i<spans.length;i++){
-        if(i<solved){spans[i].textContent=text[i]==='\n'?'\n':text[i];}
-        else if(text[i]!=='\n'){
+        if(i<solved){
+          spans[i].textContent=txt[i]==='\n'?'\n':txt[i];
+        }else if(txt[i]!=='\n'){
           spans[i].textContent=charset[Math.random()*charset.length|0];
         }
       }
     }
   });
-  prompt.style.opacity=0;
 }
 
-/* storyboard: simpler — just pulse the current layer */
-const act=[];
-circles.forEach((c,i)=>{
-  act[i*4]   =()=>anime({targets:c,scale:[1,1.12,1],duration:3000,easing:'easeInOutSine'});
-  act[i*4+1] =()=>anime({targets:tris[i],rotate:'+=0.5turn',duration:2400,easing:'easeInOutQuad'});
-});
-act[26]=()=>anime({targets:[...circles,...tris],opacity:0,duration:5000,easing:'easeInQuad',
-                   complete:diffusionReveal});
-
-/* ----------  sequencer ---------- */
-let line=-1;
-function nextLine(){
-  line++; if(line>=raw.length)return;
-  prompt.textContent=raw[line];
-  act[line]&&act[line]();
-  setTimeout(nextLine,2200);
-}
-
-/* ----------  kick-off on first click ---------- */
-let started=false;
+/* ===== ONE-TIME KICK OFF ===== */
+let begun=false;
 document.body.addEventListener('click',()=>{
-  if(started)return;
-  started=true;
-  launchMandala();
-  nextLine();
+  if(begun)return;
+  begun=true;
+  startMandala();
+  revealCodex();       // starts immediately; remove or delay if you prefer
 });
 </script>
 </body>
