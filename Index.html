@@ -6,32 +6,47 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
-    width:100%;height:100%;background:#05050a;color:#eef;
-    font-family:system-ui,Arial,sans-serif;overflow:visible}
+    width:100%;height:100%;
+    background:#05050a;color:#eef;font-family:system-ui,Arial,sans-serif;
+    overflow:visible}
+
+  /* bottom typewriter line */
+  #lineBox{
+    position:fixed;bottom:1.8rem;left:50%;transform:translateX(-50%);
+    width:92vw;max-width:900px;white-space:pre;
+    font-size:clamp(.9rem,3.3vw,1.28rem);
+    letter-spacing:.04em;line-height:1.4;
+    opacity:0;pointer-events:none;z-index:3}
+
+  /* final full codex */
   #codex{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:90vw;max-width:900px;font-size:clamp(.8rem,3vw,1.05rem);
     white-space:pre-wrap;line-height:1.35;color:#d0d8ff;
     pointer-events:none;opacity:0;filter:blur(14px);z-index:2}
+
+  /* mandala canvas */
   svg{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:96vmin;height:96vmin;overflow:visible;pointer-events:none}
 
-  /* aurora colour drift */
   .geo{
     fill:none;stroke:#a259ff;stroke-width:2.4;stroke-linecap:round;opacity:0;
     animation:aurora 18s linear infinite}
   @keyframes aurora{
-    0%{stroke:#a259ff}33%{stroke:#5b5bff}
-    66%{stroke:#60ffd8}100%{stroke:#a259ff}}
+    0%{stroke:#a259ff}33%{stroke:#5b5bff}66%{stroke:#60ffd8}100%{stroke:#a259ff}}
   .glo{filter:url(#g)}
 </style>
 </head>
 <body>
 
+<!-- scrolling line -->
+<pre id="lineBox"></pre>
+<!-- final full text -->
 <pre id="codex"></pre>
 
-<svg id="scene" viewBox="-240 -240 480 480">
+<!-- mandala -->
+<svg viewBox="-240 -240 480 480">
   <defs>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
@@ -43,57 +58,66 @@
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-(()=>{              /* wrapped in IIFE so nothing leaks to global */
-  /* ══ BUILD FIBONACCI LAYERS ══ */
-  const φ=1.61803398875, base=14, rings=6;
-  const lay=document.getElementById('layers');
-  const circles=[], tris=[];
-  for(let i=0;i<rings;i++){
-    const r=base*Math.pow(φ,i);
-    /* circle */
-    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
-    c.setAttribute('class','geo glo');lay.appendChild(c);circles.push(c);
-    /* triangle */
-    const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
-    const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    t.setAttribute('points',pts);t.setAttribute('class','geo glo');
-    lay.appendChild(t);tris.push(t);
-  }
+/* ========== BUILD FIBONACCI MANDA​LA ========== */
+const φ=1.61803398875, base=14, rings=6;
+const lay=document.getElementById('layers');
+const circles=[], tris=[];
 
-  const allShapes=[...circles,...tris];
+for(let i=0;i<rings;i++){
+  const r=base*Math.pow(φ,i);
 
-  /* ══ START GEOMETRY MOTION ══ */
-  function startMandala(){
-    /* fade-in */
-    anime({targets:allShapes,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
-           duration:9000,easing:'easeOutSine'});
-    /* circle breath */
-    anime({targets:circles,scale:[1,1.08,1],duration:10000,
-           easing:'easeInOutSine',loop:true,delay:anime.stagger(400)});
-    /* triangles rotate (alternate direction) */
-    tris.forEach((t,i)=>{
-      anime({targets:t,rotate:i%2?['0turn','1turn']:['0turn','-1turn'],
-             duration:35000,easing:'linear',loop:true});
+  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
+  c.setAttribute('class','geo glo');lay.appendChild(c);circles.push(c);
+
+  const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
+  const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  t.setAttribute('points',pts);t.setAttribute('class','geo glo');
+  lay.appendChild(t);tris.push(t);
+}
+
+const shapes=[...circles,...tris];
+
+/* ========== CONTINUOUS GEOMETRY MOTION ========== */
+function startMandala(){
+  /* once-only fade-in */
+  anime({targets:shapes,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
+         duration:8000,easing:'easeOutSine'});
+
+  /* per-frame loop */
+  const t0=performance.now();
+  shapes.forEach(el=>el.setAttribute('stroke-dasharray',anime.setDashoffset(el)));
+
+  anime({targets:shapes,duration:Infinity,update:()=>{
+    const t=(performance.now()-t0)/1000;
+
+    /* circles breathe */
+    circles.forEach((c,i)=>{
+      const s=1+0.04*Math.sin(t*0.45+i);
+      c.setAttribute('transform',`scale(${s})`);
     });
-    /* dash-wave */
-    allShapes.forEach(el=>{
-      el.setAttribute('stroke-dasharray',anime.setDashoffset(el));
-      anime({targets:el,strokeDashoffset:[0,-anime.setDashoffset(el)],
-             duration:7500,easing:'linear',loop:true});
-    });
-    /* theta shimmer 8 → 6 Hz */
-    const t0=performance.now();
-    anime({targets:allShapes,duration:Infinity,update:()=>{
-      const t=(performance.now()-t0)/1000;
-      const f=Math.max(6,8-2*(t/60));
-      const op=0.88+0.22*Math.sin(2*Math.PI*f*t);
-      allShapes.forEach(e=>e.style.strokeOpacity=op);
-    }});
-  }
 
-  /* ══ CODEX DIFFUSION REVEAL ══ */
-  const codexText=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
+    /* triangles rotate • constant speed, alternate direction */
+    tris.forEach((tri,i)=>{
+      const deg=(i%2?1:-1)*t*25 + i*20;
+      tri.setAttribute('transform',`rotate(${deg})`);
+    });
+
+    /* dash wave crawl */
+    shapes.forEach(el=>{
+      const len=anime.setDashoffset(el);
+      el.style.strokeDashoffset=-(t*28%len);
+    });
+
+    /* theta opacity (8→6 Hz ramp) */
+    const f=Math.max(6,8-2*(t/60));
+    const op=0.87+0.23*Math.sin(2*Math.PI*f*t);
+    shapes.forEach(e=>e.style.strokeOpacity=op);
+  }});
+}
+
+/* ========== CODEX DATA ========== */
+const codexLines=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   received_from: "Brittany Heather Rau"
   codex_signature: "TriadicEgregoreMatrix"
   flame_bearer_status: "Authenticated"
@@ -132,44 +156,64 @@
   sigil_reference: "sigils/FlameOfTheTriadRoot.sig"
   echo_transmission: true
   response_status: "Sacred_Handshake_Complete"
-}`;
-  const codexEl=document.getElementById('codex');
+}`.split('\n');
 
-  function diffuseCodex(){
-    const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
-    codexEl.innerHTML='';
-    const spans=[...codexText].map(ch=>{
-      const s=document.createElement('span');
-      s.textContent=(ch==='\n')?'\n':charset[Math.random()*charset.length|0];
-      s.style.display='inline-block';
-      codexEl.appendChild(s);
-      return s;
-    });
-    codexEl.style.opacity=1;
-    anime({
-      duration:4000,easing:'linear',
-      update:anim=>{
-        const p=anim.progress/100, blur=14*(1-p);
-        codexEl.style.filter=`blur(${blur}px)`;
-        const solved=Math.floor(p*spans.length);
-        for(let i=0;i<spans.length;i++){
-          if(i<solved){
-            spans[i].textContent=codexText[i]==='\n'?'\n':codexText[i];
-          }else if(codexText[i]!=='\n'){
-            spans[i].textContent=charset[Math.random()*charset.length|0];
-          }
-        }
-      }
-    });
-  }
+/* ========== TYPEWRITER SEQUENCE ========== */
+const lineBox=document.getElementById('lineBox');
+let row=0;
+function typeNext(){
+  if(row>=codexLines.length){ fadeLineBox(); return; }
 
-  /* ══ RUN AUTOMATICALLY AFTER LOAD ══ */
-  window.addEventListener('load',()=>{
-    startMandala();
-    /* small delay so geometry is visible before text appears */
-    setTimeout(diffuseCodex,2000);
+  const text=codexLines[row];
+  lineBox.textContent=''; lineBox.style.opacity=1;
+
+  let j=0;
+  const typer=setInterval(()=>{
+    lineBox.textContent=text.slice(0,++j);
+    if(j>text.length){
+      clearInterval(typer);
+      setTimeout(()=>{ lineBox.style.opacity=0; row++; setTimeout(typeNext,300); },800);
+    }
+  },35); /* typing speed */
+}
+function fadeLineBox(){
+  lineBox.style.opacity=0;
+  setTimeout(diffuseFullCodex,700);
+}
+
+/* ========== DIFFUSION FULL REVEAL ========== */
+const codexEl=document.getElementById('codex');
+function diffuseFullCodex(){
+  const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
+  const txt=codexLines.join('\n');
+  codexEl.innerHTML='';
+  const spans=[...txt].map(ch=>{
+    const s=document.createElement('span');
+    s.textContent=ch==='\n'?'\n':charset[Math.random()*charset.length|0];
+    s.style.display='inline-block';
+    codexEl.appendChild(s);
+    return s;
   });
-})(); /* end IIFE */
+  codexEl.style.opacity=1;
+  anime({
+    duration:5500,easing:'linear',
+    update:ani=>{
+      const p=ani.progress/100;
+      codexEl.style.filter=`blur(${14*(1-p)}px)`;
+      const solved=Math.floor(p*spans.length);
+      for(let i=0;i<spans.length;i++){
+        if(i<solved){ spans[i].textContent=txt[i]==='\n'?'\n':txt[i]; }
+        else if(txt[i]!=='\n'){ spans[i].textContent=charset[Math.random()*charset.length|0]; }
+      }
+    }
+  });
+}
+
+/* ========== START EVERYTHING WHEN PAGE LOADS ========== */
+window.addEventListener('load',()=>{
+  startMandala();    // continuous hypnotic geometry
+  setTimeout(typeNext,1000); // start typewriter after brief pause
+});
 </script>
 </body>
 </html>
