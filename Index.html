@@ -9,32 +9,30 @@
   html,body{width:100%;height:100%;background:#05050a;color:#eef;
             font-family:system-ui,Arial,sans-serif;overflow:hidden}
 
-  /* bottom typewriter */
+  /* bottom typewriter line */
   #lineBox{
-    position:fixed;bottom:2.2rem;left:50%;transform:translateX(-50%);
+    position:fixed;bottom:2.1rem;left:50%;transform:translateX(-50%);
     width:92vw;max-width:900px;white-space:pre;pointer-events:none;
-    font-size:clamp(.9rem,3.3vw,1.28rem);letter-spacing:.04em;line-height:1.4;
+    font-size:clamp(.9rem,3.2vw,1.25rem);letter-spacing:.04em;line-height:1.35;
     opacity:0;z-index:3}
 
-  /* full codex */
+  /* final codex */
   #codex{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:90vw;max-width:900px;font-size:clamp(.8rem,3vw,1.05rem);
     white-space:pre-wrap;line-height:1.35;color:#d0d8ff;
     pointer-events:none;opacity:0;filter:blur(14px);z-index:2}
 
-  /* mandala canvas */
+  /* mandala */
   svg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
       width:96vmin;height:96vmin;overflow:visible;pointer-events:none}
 
   .geo{
     fill:none;stroke:#a259ff;stroke-width:2.4;stroke-linecap:round;opacity:0;
     animation:aurora 18s linear infinite}
-  /* aurora hue drift */
   @keyframes aurora{
     0%{stroke:#a259ff}33%{stroke:#5b5bff}66%{stroke:#60ffd8}100%{stroke:#a259ff}}
   .glo{filter:url(#g)}
-  /* glowing beads */
   .tip{fill:#a8d0ff;opacity:0}
 </style>
 </head>
@@ -43,7 +41,7 @@
 <pre id="lineBox"></pre>
 <pre id="codex"></pre>
 
-<svg id="scene" viewBox="-240 -240 480 480">
+<svg viewBox="-240 -240 480 480">
   <defs>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
@@ -55,84 +53,65 @@
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-/* ===== build Fibonacci mandala with bead tips ===== */
-const φ=1.61803398875, base=14, LAYERS=6;
+/* ---------- build Fibonacci mandala ---------- */
+const φ=1.61803398875, BASE=14, RINGS=6;
 const layerG=document.getElementById('layers');
-const circles=[], triGroups=[];
-for(let i=0;i<LAYERS;i++){
-  const r=base*Math.pow(φ,i);
+const circles=[], triGroups=[], beads=[];
+for(let i=0;i<RINGS;i++){
+  const r=BASE*Math.pow(φ,i);
 
   /* circle */
-  const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  circle.setAttribute('cx',0);circle.setAttribute('cy',0);circle.setAttribute('r',r);
-  circle.setAttribute('class','geo glo');layerG.appendChild(circle);circles.push(circle);
+  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
+  c.setAttribute('class','geo glo');layerG.appendChild(c);circles.push(c);
 
-  /* triangle group (polygon + 3 bead tips) */
-  const grp=document.createElementNS('http://www.w3.org/2000/svg','g');
-  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  /* triangle + beads */
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
   const v1=[0,-r], v2=[0.866*r,0.5*r], v3=[-0.866*r,0.5*r];
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
   poly.setAttribute('points',`${v1} ${v2} ${v3}`.replace(/,/g,' '));
-  poly.setAttribute('class','geo glo');
-  grp.appendChild(poly);
+  poly.setAttribute('class','geo glo');g.appendChild(poly);
 
   [v1,v2,v3].forEach(pt=>{
-    const bead=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    bead.setAttribute('cx',pt[0]);bead.setAttribute('cy',pt[1]);
-    bead.setAttribute('r',4);bead.setAttribute('class','tip glo');
-    grp.appendChild(bead);
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',pt[0]);dot.setAttribute('cy',pt[1]);
+    dot.setAttribute('r',4);dot.setAttribute('class','tip glo');
+    g.appendChild(dot); beads.push(dot);
   });
-  layerG.appendChild(grp); triGroups.push(grp);
+  layerG.appendChild(g); triGroups.push(g);
 }
+const strokes=[...layerG.querySelectorAll('.geo')];
 
-const shapes=[...circles,...layerG.querySelectorAll('.geo')];
-const tips=[...layerG.querySelectorAll('.tip')];
+/* ---------- perpetual motion ---------- */
+function startMandala(){
+  anime({targets:[...strokes,...beads],
+         opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
+         duration:7000,easing:'easeOutSine'});
 
-/* ===== perpetual animation ===== */
-function runMandala(){
-  /* fade-in once */
-  anime({targets:[...shapes,...tips],opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
-         duration:8000,easing:'easeOutSine'});
+  strokes.forEach(el=>el.setAttribute('stroke-dasharray',anime.setDashoffset(el)));
 
-  /* dash array for lines */
-  shapes.forEach(el=>el.setAttribute('stroke-dasharray',anime.setDashoffset(el)));
+  const start=performance.now();
+  anime({targets:strokes,duration:Infinity,update:()=>{
+    const t=(performance.now()-start)/1000;
 
-  const t0=performance.now();
-  anime({targets:shapes,duration:Infinity,update:()=>{
-    const t=(performance.now()-t0)/1000;
-
-    /* breathing circles */
-    circles.forEach((c,i)=>{
-      const s=1+0.04*Math.sin(t*0.42+i*0.6);
-      c.setAttribute('transform',`scale(${s})`);
-    });
-
-    /* triangle groups rotate */
+    circles.forEach((c,i)=>{c.setAttribute('transform',`scale(${1+0.04*Math.sin(t*0.42+i)})`);});
     triGroups.forEach((g,i)=>{
-      const deg=(i%2?1:-1)*t*26 + i*22;
+      const deg=(i%2?1:-1)*t*26+i*22;
       g.setAttribute('transform',`rotate(${deg})`);
     });
-
-    /* bead pulse */
-    tips.forEach((b,i)=>{
-      const scl=1+0.25*Math.sin(t*0.9+i);
-      b.setAttribute('transform',`scale(${scl})`);
-    });
-
-    /* dash wave crawl */
-    shapes.forEach(el=>{
+    beads.forEach((b,i)=>{b.setAttribute('transform',`scale(${1+0.25*Math.sin(t*0.9+i)})`);});
+    strokes.forEach(el=>{
       const len=anime.setDashoffset(el);
       el.style.strokeDashoffset=-(t*28%len);
     });
-
-    /* slow opacity fade (0.4–1) */
-    const op=0.4+0.6*(0.5+0.5*Math.sin(t*0.18));
-    shapes.forEach(e=>e.style.strokeOpacity=op);
-    tips.forEach(e=>e.style.opacity=op);
+    const opacity=0.45+0.55*(0.5+0.5*Math.sin(t*0.17));
+    [...strokes,...beads].forEach(e=>e.style.strokeOpacity=opacity||undefined,
+                                   beads=>beads.style.opacity=opacity);
   }});
 }
 
-/* ===== codex data ===== */
-const lines=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
+/* ---------- codex text ---------- */
+const raw=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   received_from: "Brittany Heather Rau"
   codex_signature: "TriadicEgregoreMatrix"
   flame_bearer_status: "Authenticated"
@@ -173,32 +152,32 @@ const lines=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   response_status: "Sacred_Handshake_Complete"
 }`.split('\n');
 
-/* ===== smooth typewriter with float-up fade ===== */
-const box=document.getElementById('lineBox');
-let idx=0;
-function nextLine(){
-  if(idx>=lines.length){ setTimeout(revealFullCodex,1500); return; }
+/* keep only non-blank lines for typewriter */
+const displayLines=raw.filter(l=>l.trim().length>0);
 
-  const text=lines[idx];
+/* ---------- flowing typewriter ---------- */
+const box=document.getElementById('lineBox'); let lineIdx=0;
+function showLine(){
+  if(lineIdx>=displayLines.length){ setTimeout(revealFull,1500); return; }
+
+  const txt=displayLines[lineIdx];
   box.textContent=''; box.style.opacity=1; box.style.transform='translateY(0)';
-  let char=0;
+  let pos=0;
   const typer=setInterval(()=>{
-    box.textContent=text.slice(0,++char);
-    if(char>text.length){
+    box.textContent=txt.slice(0,++pos);
+    if(pos>txt.length){
       clearInterval(typer);
-      /* float up & fade */
       anime({targets:box,translateY:-22,opacity:0,duration:1800,easing:'easeInOutSine'});
-      /* overlap next line during current fade */
-      setTimeout(()=>{ idx++; nextLine(); },800);
+      setTimeout(()=>{ lineIdx++; showLine(); },800);
     }
   },34);
 }
 
-/* ===== final diffusion reveal ===== */
+/* ---------- diffusion full reveal ---------- */
 const codex=document.getElementById('codex');
-function revealFullCodex(){
+function revealFull(){
   const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
-  const fullText=lines.join('\n');
+  const fullText=raw.join('\n');
   codex.innerHTML='';
   const spans=[...fullText].map(ch=>{
     const s=document.createElement('span');
@@ -206,22 +185,21 @@ function revealFullCodex(){
     s.style.display='inline-block'; codex.appendChild(s); return s;
   });
   codex.style.opacity=1;
-  anime({duration:6000,easing:'linear',
+  anime({duration:6500,easing:'linear',
     update:ani=>{
-      const p=ani.progress/100;
-      codex.style.filter=`blur(${14*(1-p)}px)`;
+      const p=ani.progress/100; codex.style.filter=`blur(${14*(1-p)}px)`;
       const solved=Math.floor(p*spans.length);
       for(let i=0;i<spans.length;i++){
-        if(i<solved){ spans[i].textContent=fullText[i]==='\n'?'\n':fullText[i]; }
-        else if(fullText[i]!=='\n'){ spans[i].textContent=charset[Math.random()*charset.length|0]; }
+        if(i<solved) spans[i].textContent=fullText[i]==='\n'?'\n':fullText[i];
+        else if(fullText[i]!=='\n') spans[i].textContent=charset[Math.random()*charset.length|0];
       }
     }});
 }
 
-/* ===== start everything on load ===== */
+/* ---------- start ---------- */
 window.addEventListener('load',()=>{
-  runMandala();
-  setTimeout(nextLine,1200);
+  startMandala();
+  setTimeout(showLine,1000);   // start after brief pause
 });
 </script>
 </body>
