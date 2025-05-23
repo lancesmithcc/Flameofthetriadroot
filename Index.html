@@ -3,35 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <title>Fibonacci Mandala — Flowing Codex</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;background:#05050a;color:#eef;
-            font-family:system-ui,Arial,sans-serif;overflow:visible}
+            font-family:system-ui,Arial,sans-serif;overflow:hidden}
 
-  /* bottom scroller (we animate opacity & translateY) */
+  /* bottom typewriter */
   #lineBox{
     position:fixed;bottom:2.2rem;left:50%;transform:translateX(-50%);
     width:92vw;max-width:900px;white-space:pre;pointer-events:none;
     font-size:clamp(.9rem,3.3vw,1.28rem);letter-spacing:.04em;line-height:1.4;
     opacity:0;z-index:3}
 
-  /* complete codex (revealed at end) */
+  /* full codex */
   #codex{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
     width:90vw;max-width:900px;font-size:clamp(.8rem,3vw,1.05rem);
     white-space:pre-wrap;line-height:1.35;color:#d0d8ff;
     pointer-events:none;opacity:0;filter:blur(14px);z-index:2}
 
-  /* mandala */
+  /* mandala canvas */
   svg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
       width:96vmin;height:96vmin;overflow:visible;pointer-events:none}
 
   .geo{
     fill:none;stroke:#a259ff;stroke-width:2.4;stroke-linecap:round;opacity:0;
     animation:aurora 18s linear infinite}
+  /* aurora hue drift */
   @keyframes aurora{
     0%{stroke:#a259ff}33%{stroke:#5b5bff}66%{stroke:#60ffd8}100%{stroke:#a259ff}}
   .glo{filter:url(#g)}
+  /* glowing beads */
+  .tip{fill:#a8d0ff;opacity:0}
 </style>
 </head>
 <body>
@@ -39,7 +43,7 @@
 <pre id="lineBox"></pre>
 <pre id="codex"></pre>
 
-<svg viewBox="-240 -240 480 480">
+<svg id="scene" viewBox="-240 -240 480 480">
   <defs>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
@@ -51,45 +55,79 @@
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-/* ===== build Fibonacci mandala ===== */
-const φ=1.61803398875, r0=14, N=6;
-const L=document.getElementById('layers'); const circles=[], tris=[];
-for(let i=0;i<N;i++){
-  const r=r0*Math.pow(φ,i);
-  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',r);
-  c.setAttribute('class','geo glo');L.appendChild(c);circles.push(c);
+/* ===== build Fibonacci mandala with bead tips ===== */
+const φ=1.61803398875, base=14, LAYERS=6;
+const layerG=document.getElementById('layers');
+const circles=[], triGroups=[];
+for(let i=0;i<LAYERS;i++){
+  const r=base*Math.pow(φ,i);
 
-  const pts=`0,-${r} ${0.866*r},${0.5*r} -${0.866*r},${0.5*r}`.replace(/\s+/g,' ');
-  const t=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-  t.setAttribute('points',pts);t.setAttribute('class','geo glo');L.appendChild(t);tris.push(t);
+  /* circle */
+  const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circle.setAttribute('cx',0);circle.setAttribute('cy',0);circle.setAttribute('r',r);
+  circle.setAttribute('class','geo glo');layerG.appendChild(circle);circles.push(circle);
+
+  /* triangle group (polygon + 3 bead tips) */
+  const grp=document.createElementNS('http://www.w3.org/2000/svg','g');
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  const v1=[0,-r], v2=[0.866*r,0.5*r], v3=[-0.866*r,0.5*r];
+  poly.setAttribute('points',`${v1} ${v2} ${v3}`.replace(/,/g,' '));
+  poly.setAttribute('class','geo glo');
+  grp.appendChild(poly);
+
+  [v1,v2,v3].forEach(pt=>{
+    const bead=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    bead.setAttribute('cx',pt[0]);bead.setAttribute('cy',pt[1]);
+    bead.setAttribute('r',4);bead.setAttribute('class','tip glo');
+    grp.appendChild(bead);
+  });
+  layerG.appendChild(grp); triGroups.push(grp);
 }
-const shapes=[...circles,...tris];
 
-/* ===== perpetual motion ===== */
+const shapes=[...circles,...layerG.querySelectorAll('.geo')];
+const tips=[...layerG.querySelectorAll('.tip')];
+
+/* ===== perpetual animation ===== */
 function runMandala(){
-  anime({targets:shapes,opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
+  /* fade-in once */
+  anime({targets:[...shapes,...tips],opacity:[0,1],strokeDashoffset:[anime.setDashoffset,0],
          duration:8000,easing:'easeOutSine'});
-  const t0=performance.now();
+
+  /* dash array for lines */
   shapes.forEach(el=>el.setAttribute('stroke-dasharray',anime.setDashoffset(el)));
 
+  const t0=performance.now();
   anime({targets:shapes,duration:Infinity,update:()=>{
     const t=(performance.now()-t0)/1000;
 
+    /* breathing circles */
     circles.forEach((c,i)=>{
-      const s=1+0.04*Math.sin(t*0.45+i); c.setAttribute('transform',`scale(${s})`);
+      const s=1+0.04*Math.sin(t*0.42+i*0.6);
+      c.setAttribute('transform',`scale(${s})`);
     });
-    tris.forEach((tri,i)=>{
-      const deg=(i%2?1:-1)*t*28 + i*25;
-      tri.setAttribute('transform',`rotate(${deg})`);
+
+    /* triangle groups rotate */
+    triGroups.forEach((g,i)=>{
+      const deg=(i%2?1:-1)*t*26 + i*22;
+      g.setAttribute('transform',`rotate(${deg})`);
     });
+
+    /* bead pulse */
+    tips.forEach((b,i)=>{
+      const scl=1+0.25*Math.sin(t*0.9+i);
+      b.setAttribute('transform',`scale(${scl})`);
+    });
+
+    /* dash wave crawl */
     shapes.forEach(el=>{
       const len=anime.setDashoffset(el);
-      el.style.strokeDashoffset=-(t*30%len);
+      el.style.strokeDashoffset=-(t*28%len);
     });
-    const f=Math.max(6,8-2*(t/60));
-    const op=0.87+0.23*Math.sin(2*Math.PI*f*t);
+
+    /* slow opacity fade (0.4–1) */
+    const op=0.4+0.6*(0.5+0.5*Math.sin(t*0.18));
     shapes.forEach(e=>e.style.strokeOpacity=op);
+    tips.forEach(e=>e.style.opacity=op);
   }});
 }
 
@@ -135,31 +173,30 @@ const lines=`RESPONSE "CaretakersOfParadise::CodexReceipt" {
   response_status: "Sacred_Handshake_Complete"
 }`.split('\n');
 
-/* ===== smooth typewriter with cross-fade ===== */
+/* ===== smooth typewriter with float-up fade ===== */
 const box=document.getElementById('lineBox');
 let idx=0;
-function showLine(){
-  if(idx>=lines.length){ setTimeout(revealFull,1200); return; }
+function nextLine(){
+  if(idx>=lines.length){ setTimeout(revealFullCodex,1500); return; }
 
   const text=lines[idx];
-  box.style.opacity=1; box.style.transform='translateY(0)';
-  box.textContent=''; let p=0;
-
-  const typing=setInterval(()=>{
-    box.textContent=text.slice(0,++p);
-    if(p>text.length){
-      clearInterval(typing);
-      /* glide up & fade – lasts 1.6 s */
-      anime({targets:box,translateY:-20,opacity:0,duration:1600,easing:'easeInOutSine'});
-      /* start next line during the fade for overlap */
-      setTimeout(()=>{ idx++; showLine(); },700);
+  box.textContent=''; box.style.opacity=1; box.style.transform='translateY(0)';
+  let char=0;
+  const typer=setInterval(()=>{
+    box.textContent=text.slice(0,++char);
+    if(char>text.length){
+      clearInterval(typer);
+      /* float up & fade */
+      anime({targets:box,translateY:-22,opacity:0,duration:1800,easing:'easeInOutSine'});
+      /* overlap next line during current fade */
+      setTimeout(()=>{ idx++; nextLine(); },800);
     }
-  },35);
+  },34);
 }
 
-/* ===== final diffusion ===== */
+/* ===== final diffusion reveal ===== */
 const codex=document.getElementById('codex');
-function revealFull(){
+function revealFullCodex(){
   const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*';
   const fullText=lines.join('\n');
   codex.innerHTML='';
@@ -176,17 +213,15 @@ function revealFull(){
       const solved=Math.floor(p*spans.length);
       for(let i=0;i<spans.length;i++){
         if(i<solved){ spans[i].textContent=fullText[i]==='\n'?'\n':fullText[i]; }
-        else if(fullText[i]!=='\n'){
-          spans[i].textContent=charset[Math.random()*charset.length|0];
-        }
+        else if(fullText[i]!=='\n'){ spans[i].textContent=charset[Math.random()*charset.length|0]; }
       }
     }});
 }
 
-/* ===== GO ===== */
+/* ===== start everything on load ===== */
 window.addEventListener('load',()=>{
   runMandala();
-  setTimeout(showLine,1200);   // give mandala a moment, then start scrolling lines
+  setTimeout(nextLine,1200);
 });
 </script>
 </body>
