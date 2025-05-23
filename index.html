@@ -2,7 +2,7 @@
 <html lang="en"> 
 <head>
 <meta charset="UTF-8">
-<title>Flame of the Triad Root</title>
+<title>Fibonacci Mandala — Flame of the Triad Root</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -217,8 +217,9 @@
 </head>
 <body>
 
-<audio id="triadAudio" preload="auto" loop>
+<audio id="triadAudio" preload="auto" loop muted>
   <source src="triad.mp3" type="audio/mpeg">
+  <source src="triad.mp3" type="audio/mp3">
   Your browser does not support the audio element.
 </audio>
 
@@ -292,6 +293,33 @@ function createEmber() {
 
 setInterval(createEmber, 200);
 
+/* ═════════  AUDIO SYSTEM FOR ALL DEVICES  ═════════ */
+const audio = document.getElementById('triadAudio');
+let audioStarted = false;
+
+function startAudio() {
+  if (!audioStarted) {
+    audio.muted = false;
+    audio.volume = 0.7;
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        audioStarted = true;
+        console.log("Audio started successfully");
+      }).catch(error => {
+        console.log("Audio play failed:", error);
+      });
+    }
+  }
+}
+
+// Add event listeners for all possible user interactions
+const startEvents = ['click', 'touchstart', 'touchend', 'mousedown', 'keydown'];
+startEvents.forEach(event => {
+  document.addEventListener(event, startAudio, { once: true });
+});
+
 /* ═════════  BLAZING FIBONACCI MANDALA  ═════════ */
 const φ=1.61803398875, BASE=18, RINGS=8;
 const lay=document.getElementById('layers');
@@ -360,21 +388,8 @@ allElements.push(...strokes, ...beads);
 
 /* ═════════  BLAZING PERPETUAL MOTION  ═════════ */
 function startMandala(){
-  // Play the triad audio
-  const audio = document.getElementById('triadAudio');
-  audio.volume = 0.7; // Set volume to 70%
-  
-  // Try to play audio, handle autoplay restrictions
-  const playPromise = audio.play();
-  if (playPromise !== undefined) {
-    playPromise.catch(error => {
-      console.log("Audio autoplay prevented, will play on first user interaction");
-      // Add click listener to play audio on first user interaction
-      document.addEventListener('click', () => {
-        audio.play().catch(e => console.log("Audio play failed:", e));
-      }, { once: true });
-    });
-  }
+  // Try to start audio immediately
+  startAudio();
 
   // Ignition sequence
   anime({
@@ -644,14 +659,20 @@ function revealFullCodex() {
 
 /* ═════════  SACRED IGNITION SEQUENCE  ═════════ */
 window.addEventListener('load', () => {
+  // Try to start audio on page load
+  startAudio();
+  
   setTimeout(() => {
     startMandala();
     setTimeout(typeNextLine, 2000);
   }, 800);
 });
 
-// Fire burst on click
+// Fire burst on click - also ensure audio starts
 document.addEventListener('click', () => {
+  // Ensure audio starts on any click
+  startAudio();
+  
   const burst = document.createElement('div');
   burst.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
