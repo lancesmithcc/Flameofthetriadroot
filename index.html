@@ -127,7 +127,7 @@
     position:fixed;top:10vh;left:5%;right:5%;
     width:90vw;max-width:none;font-size:clamp(0.8rem,2.5vw,1.1rem);
     white-space:pre-wrap;line-height:1.4;color:#0ac3bd;
-    pointer-events:none;opacity:0;filter:blur(25px);z-index:3;
+    pointer-events:none;opacity:0;z-index:3;
     text-shadow: 0 0 8px #44e8dd, 0 0 16px #4adde8;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(39, 39, 39, 0.7));
     padding: 2rem;
@@ -728,7 +728,8 @@ function revealFullCodex() {
     easing: 'easeInOutCubic',
     update: a => {
       const p = a.progress / 100;
-      codex.style.filter = `blur(${30 * (1 - p)}px) hue-rotate(${180 * p * 0.3}deg)`;
+      // Remove blur effect, keep only hue rotation
+      codex.style.filter = `hue-rotate(${180 * p * 0.3}deg)`;
       
       const solved = Math.floor(p * spans.length);
       const flamePhase = p * 15;
@@ -739,12 +740,19 @@ function revealFullCodex() {
           spans[i].style.color = '#0ac3bd';
           spans[i].style.textShadow = '0 0 8px #44e8dd, 0 0 16px #4adde8';
         } else {
+          // Enhanced scramble effect for unrevealed characters
           spans[i].textContent = fullText[i] === '\n' ? '\n' : charset[Math.random() * charset.length | 0];
           const flame = Math.sin(flamePhase + i * 0.08);
-          const r = Math.floor(100 + flame * 155);
-          const g = Math.floor(200 + flame * 55);
-          const b = Math.floor(200 + flame * 55);
+          const scrambleIntensity = Math.sin(Date.now() * 0.01 + i * 0.1);
+          const r = Math.floor(50 + Math.random() * 205);
+          const g = Math.floor(150 + flame * 105 + scrambleIntensity * 50);
+          const b = Math.floor(150 + flame * 105 + scrambleIntensity * 50);
           spans[i].style.color = `rgb(${r},${g},${b})`;
+          
+          // Add random flicker effect
+          if (Math.random() < 0.1) {
+            spans[i].style.textShadow = `0 0 ${Math.random() * 20}px rgb(${r},${g},${b})`;
+          }
         }
       }
     },
@@ -810,7 +818,7 @@ function scrambleAndRestart() {
       targets: codex,
       opacity: [1, 0],
       scale: [1, 0.8],
-      filter: 'blur(50px)',
+      filter: 'hue-rotate(0deg)',
       duration: 1000,
       easing: 'easeInBack',
       complete: () => {
@@ -818,7 +826,7 @@ function scrambleAndRestart() {
         idx = 0;
         box.style.opacity = 0;
         codex.style.opacity = 0;
-        codex.style.filter = 'blur(25px)';
+        codex.style.filter = 'hue-rotate(0deg)';
         codex.style.scale = '1';
         
         // Restart the ritual
