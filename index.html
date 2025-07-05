@@ -66,20 +66,20 @@
 
   @keyframes flameFlicker {
     0%, 100% { 
-      text-shadow: 0 0 10px #6a0dad, 0 0 20px #8a2be2, 0 0 30px #4b0082;
-      color: #6a0dad;
+      text-shadow: 0 0 10px #12cfe8, 0 0 20px #2b96e2, 0 0 30px #2197e5;
+      color: #0d9dad;
     }
     25% { 
-      text-shadow: 0 0 15px #8a2be2, 0 0 25px #9370db, 0 0 35px #20b2aa;
-      color: #8a2be2;
+      text-shadow: 0 0 15px #22cbde, 0 0 25px #26c4f5, 0 0 35px #20b2aa;
+      color: #2b99e2;
     }
     50% { 
-      text-shadow: 0 0 20px #9370db, 0 0 30px #dda0dd, 0 0 40px #008080;
+      text-shadow: 0 0 20px #70c6db, 0 0 30px #a0d5dd, 0 0 40px #73c2c2;
       color: #9370db;
     }
     75% { 
-      text-shadow: 0 0 15px #8a2be2, 0 0 25px #6a0dad, 0 0 35px #5f9ea0;
-      color: #8a2be2;
+      text-shadow: 0 0 15px #2bd9e2, 0 0 25px #0d40ad, 0 0 35px #5f9ea0;
+      color: #2bb4e2;
     }
   }
 
@@ -89,14 +89,14 @@
     width:90vw;max-width:none;white-space:pre-wrap;pointer-events:none;
     font-size:clamp(0.9rem,2.8vw,1.2rem);letter-spacing:.06em;line-height:1.4;
     opacity:0;z-index:4;
-    text-shadow: 0 0 10px #3d3c3e, 0 0 20px #444245, 0 0 30px #2f2f2f;
+    text-shadow: 0 0 10px #3c3d3e, 0 0 20px #424445, 0 0 30px #2f2f2f;
     color: #dda0dd;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(34, 34, 35, 0.6));
     padding: 1.5rem;
     border-radius: 12px;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(9, 112, 116, 0.4);
-    box-shadow: 0 0 30px rgba(106, 13, 173, 0.3), inset 0 0 20px rgba(147, 112, 219, 0.1);
+    box-shadow: 0 0 30px rgba(10, 61, 132, 0.3), inset 0 0 20px rgba(147, 112, 219, 0.1);
     text-align: left;
     overflow-wrap: break-word;
     margin: 0 auto;
@@ -109,7 +109,7 @@
     width:90vw;max-width:none;white-space:pre-wrap;
     font-size:clamp(0.9rem,2.8vw,1.2rem);letter-spacing:.06em;line-height:1.4;
     pointer-events:none;z-index:4;
-    text-shadow: 0 0 8px #9370db, 0 0 16px #6a5acd;
+    text-shadow: 0 0 8px #70a5db, 0 0 16px #3eb0bf;
     color: #71bbab;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(79, 105, 91, 0.4));
     padding: 1.5rem;
@@ -126,9 +126,9 @@
   #codex{
     position:fixed;top:10vh;left:5%;right:5%;
     width:90vw;max-width:none;font-size:clamp(0.8rem,2.5vw,1.1rem);
-    white-space:pre-wrap;line-height:1.4;color:#8bf942;
+    white-space:pre-wrap;line-height:1.4;color:#0ac3bd;
     pointer-events:none;opacity:0;filter:blur(25px);z-index:3;
-    text-shadow: 0 0 8px #44e8dd, 0 0 16px #aceb74;
+    text-shadow: 0 0 8px #44e8dd, 0 0 16px #4adde8;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(39, 39, 39, 0.7));
     padding: 2rem;
     border-radius: 16px;
@@ -146,7 +146,7 @@
   /* Fire mandala enhancements */
   svg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
       width:100vmin;height:100vmin;overflow:visible;pointer-events:none;
-      filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.4));}
+      filter: drop-shadow(0 0 20px rgba(9, 234, 246, 0.4));}
 
   .geo{
     fill:none;stroke:#6a0dad;stroke-width:3;stroke-linecap:round;opacity:0;
@@ -155,28 +155,28 @@
   }
   
   @keyframes fireAurora{
-    0%{stroke:#6a0dad; stroke-width:3;}
-    16%{stroke:#8a2be2; stroke-width:4;}
-    33%{stroke:#9370db; stroke-width:2.5;}
+    0%{stroke:#02dfd7; stroke-width:3;}
+    16%{stroke:#06c188; stroke-width:4;}
+    33%{stroke:#53b6fe; stroke-width:2.5;}
     50%{stroke:#20b2aa; stroke-width:3.5;}
-    66%{stroke:#4b0082; stroke-width:2;}
-    83%{stroke:#dda0dd; stroke-width:4;}
-    100%{stroke:#6a0dad; stroke-width:3;}
+    66%{stroke:#0ddafe; stroke-width:2;}
+    83%{stroke:#07c5a5; stroke-width:4;}
+    100%{stroke:#00b27a; stroke-width:3;}
   }
   
   .glo{filter:url(#fireGlow)}
-  .tip{fill:#9370db;opacity:0; filter: drop-shadow(0 0 8px #8a2be2);}
+  .tip{fill:#03eefb;opacity:0; filter: drop-shadow(0 0 8px #0f75e2);}
 
   /* Fire particles */
   .ember {
     position: fixed;
     width: 3px;
     height: 3px;
-    background: radial-gradient(circle, #000000, #4b0082);
+    background: radial-gradient(circle, #000000, #020726);
     border-radius: 50%;
     pointer-events: none;
     z-index: 2;
-    box-shadow: 0 0 6px #34253f;
+    box-shadow: 0 0 6px #01cec0;
   }
 
   /* Fire cursor */
@@ -184,17 +184,17 @@
     position: fixed;
     width: 24px;
     height: 24px;
-    border: 2px solid #8a2be2;
+    border: 2px solid #044241;
     border-radius: 50%;
     pointer-events: none;
     z-index: 10;
     animation: fireCursorPulse 2s ease-in-out infinite;
-    box-shadow: 0 0 15px #6a0dad, inset 0 0 10px rgba(138, 43, 226, 0.3);
+    box-shadow: 0 0 15px #074771, inset 0 0 10px rgba(138, 43, 226, 0.3);
   }
 
   @keyframes fireCursorPulse {
-    0%, 100% { transform: scale(1); border-color: #8a2be2; }
-    50% { transform: scale(1.3); border-color: #9370db; }
+    0%, 100% { transform: scale(1); border-color: #0edcf3; }
+    50% { transform: scale(1.3); border-color: #156f83; }
   }
 
   /* Heat wave effect */
@@ -265,8 +265,8 @@
     </filter>
     
     <radialGradient id="fireGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#8a2be2;stop-opacity:0.6"/>
-      <stop offset="50%" style="stop-color:#6a0dad;stop-opacity:0.3"/>
+      <stop offset="0%" style="stop-color:#12b5f0;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#0ea5f7;stop-opacity:0.3"/>
       <stop offset="100%" style="stop-color:#20b2aa;stop-opacity:0.1"/>
     </radialGradient>
   </defs>
