@@ -736,14 +736,14 @@ function revealFullCodex() {
       for (let i = 0; i < spans.length; i++) {
         if (i < solved) {
           spans[i].textContent = fullText[i];
-          spans[i].style.color = '#ffcc66';
-          spans[i].style.textShadow = '0 0 8px #ff8844, 0 0 16px #ff6622';
+          spans[i].style.color = '#0ac3bd';
+          spans[i].style.textShadow = '0 0 8px #44e8dd, 0 0 16px #4adde8';
         } else {
           spans[i].textContent = fullText[i] === '\n' ? '\n' : charset[Math.random() * charset.length | 0];
           const flame = Math.sin(flamePhase + i * 0.08);
-          const r = Math.floor(255);
-          const g = Math.floor(100 + flame * 80);
-          const b = Math.floor(flame * 40);
+          const r = Math.floor(100 + flame * 155);
+          const g = Math.floor(200 + flame * 55);
+          const b = Math.floor(200 + flame * 55);
           spans[i].style.color = `rgb(${r},${g},${b})`;
         }
       }
@@ -753,16 +753,81 @@ function revealFullCodex() {
       anime({
         targets: codex,
         boxShadow: [
-          '0 0 40px rgba(255, 69, 0, 0.4)',
-          '0 0 80px rgba(255, 140, 0, 0.6)',
-          '0 0 40px rgba(255, 69, 0, 0.4)'
+          '0 0 40px rgba(10, 195, 189, 0.4)',
+          '0 0 80px rgba(68, 232, 221, 0.6)',
+          '0 0 40px rgba(10, 195, 189, 0.4)'
         ],
         duration: 4000,
         easing: 'easeInOutSine',
         loop: true
       });
+      
+      // Make codex clickable to restart ritual
+      codex.style.cursor = 'pointer';
+      codex.style.pointerEvents = 'auto';
+      
+      // Add click handler for scramble and restart
+      codex.addEventListener('click', scrambleAndRestart);
     }
   });
+}
+
+function scrambleAndRestart() {
+  // Remove click handler temporarily
+  codex.removeEventListener('click', scrambleAndRestart);
+  codex.style.cursor = 'none';
+  codex.style.pointerEvents = 'none';
+  
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?⚡※★☆◊◆▲▼';
+  const spans = codex.querySelectorAll('span');
+  
+  // Scramble animation
+  anime({
+    targets: codex,
+    scale: [1, 1.05, 0.95],
+    duration: 800,
+    easing: 'easeInOutQuad'
+  });
+  
+  // Intense scramble effect
+  const scrambleInterval = setInterval(() => {
+    spans.forEach(span => {
+      if (span.textContent !== '\n') {
+        span.textContent = charset[Math.random() * charset.length | 0];
+        const r = Math.floor(Math.random() * 255);
+        const g = Math.floor(100 + Math.random() * 155);
+        const b = Math.floor(100 + Math.random() * 155);
+        span.style.color = `rgb(${r},${g},${b})`;
+      }
+    });
+  }, 50);
+  
+  // Fade out and restart
+  setTimeout(() => {
+    clearInterval(scrambleInterval);
+    
+    anime({
+      targets: codex,
+      opacity: [1, 0],
+      scale: [1, 0.8],
+      filter: 'blur(50px)',
+      duration: 1000,
+      easing: 'easeInBack',
+      complete: () => {
+        // Reset ritual state
+        idx = 0;
+        box.style.opacity = 0;
+        codex.style.opacity = 0;
+        codex.style.filter = 'blur(25px)';
+        codex.style.scale = '1';
+        
+        // Restart the ritual
+        setTimeout(() => {
+          typeNextLine();
+        }, 1000);
+      }
+    });
+  }, 2000);
 }
 
 /* ═════════  SACRED IGNITION SEQUENCE  ═════════ */
